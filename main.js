@@ -1,11 +1,41 @@
 var height = 300;
 var width = 800;
 var margin = 50;
- 
+var svg = d3.select("#my_dataviz")
+.append("svg")
+    .attr("width", width + margin + margin)
+    .attr("height", height + margin + margin)
+.append("g")
+    .attr("transform",
+        "translate(" + margin + "," + margin + ")");
 // get type for each year and filter by make
 function filterJSON(json, key, selected) {
-    var result = [];               
-    var Makes = d3.nest()
+    var result = [];            
+        
+    if (selected == "All"){
+        var Makes = d3.nest()
+        .key(function(d) {
+            return d["Transmission Type"];
+        })
+        .sortKeys(d3.ascending)
+        .rollup(function(v) {return {  
+            count: v.length
+        };})
+        .entries(json)
+        .map(function(v){
+                return{
+                    "TransType": v.key,
+                    "Count": v.value.count
+                }
+            })
+        json = JSON.stringify(Makes)
+        json = JSON.parse(json);
+        result =[{
+            "Make": "All",
+            "data": json
+        }]
+    }else{
+        var Makes = d3.nest()
         .key(function(d) {
             return d.Make;
         })
@@ -29,13 +59,9 @@ function filterJSON(json, key, selected) {
                 })
             };
         });
-    var json = JSON.stringify(Makes)
-    var json = JSON.parse(json);
-    console.log(json)
-    
-    if (selected == "All"){
-        result= json;
-    }else{
+        var json = JSON.stringify(Makes)
+        var json = JSON.parse(json);
+        // console.log(json)
         result = json.filter(function(d){
             return d.Make == selected;
         });
@@ -43,31 +69,56 @@ function filterJSON(json, key, selected) {
         
     console.log(result);
     return result;
-}        
-d3.csv("./data.csv", function(data) {
-    var svg = d3.select("#my_dataviz")
-        .append("svg")
-            .attr("width", width + margin + margin)
-            .attr("height", height + margin + margin)
-        .append("g")
-            .attr("transform",
-                "translate(" + margin + "," + margin + ")");
-       
+}
+
+function AddDropDownList(makes) {    
+    var ddlMakes = document.getElementById("inds");
+
+    //Add the Options to the DropDownList.
+    for (var i = 0; i < makes.length; i++) {
+        var option = document.createElement("OPTION");
+
+        option.innerHTML = makes[i];
+        option.value = makes[i];
+        ddlMakes.options.add(option);
+    }
+    var dvContainer = document.getElementById("dvContainer")
+
+    dvContainer.appendChild(ddlMakes);
+};
+
+d3.csv("./data.csv", function(data) {   
     var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d.Make;})
         .sortKeys(d3.ascending)
         .entries(data);
     var res = sumstat.map(function(d){ return d.key }) // list of make names
-    // console.log(res);
+    console.log(res);
+    AddDropDownList(res)
 
-    sumstat = filterJSON(data, 'Make', 'GMC');
-    
+    d3.select('#inds')
+    .on("change", function () {
+        var sect = document.getElementById("inds");
+        var section = sect.options[sect.selectedIndex].value;
+        console.log(section)
+        fd = filterJSON(data, 'Make', section);
+                    
+        d3.selectAll("g>*").remove();
+        updateGraph(data, fd);
+    });
+    // middle not used?
+    fd = filterJSON(data, 'Make', 'All');
+    updateGraph(data, fd);
+
+})
+
+function updateGraph(data, sumstat){    
     var yy = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d.Year;})
         .sortKeys(d3.ascending)
         .entries(data);
     var ry = yy.map(function(d){ return d.key }) // list of make names
-    
+    console.log(sumstat)
     // Add X axis --> it is a date format
     var x = d3.scaleBand()
         // .domain(d3.extent(data, function(d) { return d.Year; }))
@@ -102,4 +153,4 @@ d3.csv("./data.csv", function(data) {
             .attr("width", x.bandwidth())
             .attr("height", function(d) { return height - y(d["Count"]); })
             .attr("fill", "#69b3a2")
-})
+}
