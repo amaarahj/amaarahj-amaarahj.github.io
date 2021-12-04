@@ -73,7 +73,11 @@ function filterJSON(json, key, selected) {
 
 function AddDropDownList(makes) {    
     var ddlMakes = document.getElementById("inds");
+    var option = document.createElement("OPTION");
 
+    option.innerHTML = "All";
+    option.value = "All";
+    ddlMakes.options.add(option);
     //Add the Options to the DropDownList.
     for (var i = 0; i < makes.length; i++) {
         var option = document.createElement("OPTION");
