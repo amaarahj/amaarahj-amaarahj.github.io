@@ -39,7 +39,7 @@ function filterJSON(json, key, selected) {
         .key(function(d) {
             return d.Make;
         })
-        .key(function(d) {
+                .key(function(d) {
             return d.Year;
         })
         .sortKeys(d3.ascending)
@@ -88,11 +88,15 @@ d3.csv("./data.csv", function(data) {
         .key(function(d) {
             return d["Transmission Type"];
         })
+        .key(function(d) { return d.Year;})
         .key(function(d) { return d.Make;})
         .sortKeys(d3.ascending)
         .entries(data);
     sumstat = sumstat.filter(function(d){
         return d.key == 'MANUAL';
+    })
+    sumstat = sumstat[0].values.filter(function(d){
+        return d.key == '2015';
     })
     var res = sumstat[0].values.map(function(d){ return d.key }) // list of make names
     console.log(res);
@@ -115,50 +119,45 @@ d3.csv("./data.csv", function(data) {
 })
 
 function updateGraph(data, sumstat){    
-    var yy = d3.nest() // nest function allows to group the calculation per level of a factor
-        .key(function(d) { return d.Year;})
+    var group = d3.nest()
+        .key(function(d){return d["Vehicle Size"]})
         .sortKeys(d3.ascending)
-        .entries(data);    
-    var ry = yy.map(function(d){ return d.key }) // list of make names
-    console.log(sumstat)// Add X axis --> it is a date format
-    var x = d3.scaleTime()
-    .domain(d3.extent(sumstat[0].values, function(d) {return d.key; }))
-    // .domain(d3.extent(data, function(d) { return d.Year; }))
-        .range([ 0, width ])  
-        // .domain(sumstat[0].data.map(function(d) { return d.TransType; }))
-        // .padding(0.2);
-    svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x).tickValues(ry).tickFormat(d3.format("")));
+        .entries(data);
+    console.log("group")
+    console.log(group)
+    var res = group[0].values.map(function(d){ return d.key })
+    var color = d3.scaleOrdinal()
+        .domain(res)
+        .range(['orange','purple','blue','brown'])
+
+    var x= d3.scaleLinear().domain([0,5000]).range([0,width]);
+    var y= d3.scaleLinear().domain([0,50000]).range([height,0]);
     // Add Y axis 
     console.log(sumstat[0].values)
     var y = d3.scaleLinear()
         .domain([0, 1.1*d3.max(sumstat[0].values, function(d) { return d.value.count; })])
         .range([ height, 0 ]);
-    // if (sumstat.length ==48){
-    //     y= d3.scaleLinear()
-    //     .domain([0, 2])
-    //     .range([ height, 0 ]);
-    // } get largest y from automated
-    svg.append("g")
-    .call(d3.axisLeft(y));
-    var u = svg.selectAll("rect")
-        .data(sumstat[0].values)
-    u
-        .enter()
-        .append("rect")
-        .on('click', function (d) {
-            console.log(d)
-            window.location.href = "third.html";
+
+    d3.select('svg').append('g').attr("transform","translate(" + margin + "," + margin + ")")
+        .call(d3.axisLeft(y));
+    d3.select('svg').append('g').attr("transform","translate(" + margin + ","+(height+margin)+")")
+        .call(d3.axisBottom(x));
+
+    svg.append("g").selectAll('circle').data(sumstat[0].values).enter().append('circle')
+        .attr('cx',function(d) {
+            // if(d["name"]=="Singapore"){
+            //     tx=xscale(d["Popularity"]);
+            // } 
+            return x(d["Popularity"]);
         })
-        .merge(u)
-        .transition()
-        .duration(1000)
-            .attr("x", function(d) { return x(d.key); })
-            .attr("y", function(d) { return y(d.value.count); })
-            .attr("width", 5)
-            // .attr("width", x.bandwidth())
-            .attr("height", function(d) { return height - y(d.value.count); })
-            .attr("fill", "#69b3a2")
+        .attr('cy',function(d) {
+            // if(d["name"]=="Singapore"){
+            //     ty=yscale(d["Economy.GDP.per.Capita."])
+            // }      
+            return y(d["MSRP"]);
+        })
+        .style("fill", "white")
+        .style("stroke", function(d){ return color(d["Vehicle Size"]) })
+        .attr('r', 4)
 
 }
