@@ -1,5 +1,5 @@
 var height = 300;
-var width = 800;
+var width = 1000;
 var margin = 50;
 var svg = d3.select("#my_dataviz")
 .append("svg")
@@ -8,7 +8,8 @@ var svg = d3.select("#my_dataviz")
 .append("g")
     .attr("transform",
         "translate(" + margin + "," + margin + ")");
-function filterJSON(json, key, selected) {
+
+function filterJSON(json, key, key2, selected) {
     var result = [];            
         
     if (selected == "All"){
@@ -20,16 +21,15 @@ function filterJSON(json, key, selected) {
             return d.Year;
         })
         .sortKeys(d3.ascending)
-        .rollup(function(v) {return {  
-            count: v.length
-        };})
         .entries(json)
-
         json = JSON.stringify(Makes)
         json = JSON.parse(json);
         console.log(json)
         result = json.filter(function(d){
             return d.key == key;
+        });
+        result = result[0].values.filter(function(d){
+            return d.key == key2;
         });
     }else{
         var Makes = d3.nest()
@@ -37,32 +37,35 @@ function filterJSON(json, key, selected) {
             return d["Transmission Type"];
         })
         .key(function(d) {
-            return d.Make;
-        })
-                .key(function(d) {
             return d.Year;
         })
-        .sortKeys(d3.ascending)
-        .rollup(function(v) {return {  
-            count: v.length
-        };})
+        .key(function(d) {
+            return d.Make;
+        })
+                
         .entries(json)
         ;
         var json = JSON.stringify(Makes)
         var json = JSON.parse(json);
+        console.log("orig");
         console.log(json)
         result = json.filter(function(d){
             return d.key == key;
         })
+        result = result[0].values.filter(function(d){
+            return d.key == key2;
+        });
         console.log(result[0].values)
         result = result[0].values.filter(function(d){
             return d.key == selected;
         });
     }
-        
+    console.log("2x filtered");
     console.log(result);
+
     return result;
 }
+
 function AddDropDownList(makes) {    
     var ddlMakes = document.getElementById("inds");
     var option = document.createElement("OPTION");
@@ -107,13 +110,13 @@ d3.csv("./data.csv", function(data) {
         var sect = document.getElementById("inds");
         var section = sect.options[sect.selectedIndex].value;
         console.log(section)
-        fd = filterJSON(data, 'MANUAL', section);
+        fd = filterJSON(data, 'MANUAL', '2015', section);
                     
         d3.selectAll("g>*").remove();
         updateGraph(data, fd);
     });
     // middle used as global
-    fd = filterJSON(data, 'MANUAL', 'All');
+    fd = filterJSON(data, 'MANUAL', '2015', 'All');
     updateGraph(data, fd);
 
 })
@@ -123,20 +126,17 @@ function updateGraph(data, sumstat){
         .key(function(d){return d["Vehicle Size"]})
         .sortKeys(d3.ascending)
         .entries(data);
-    console.log("group")
-    console.log(group)
+    // console.log("group")
+    // console.log(group)
     var res = group[0].values.map(function(d){ return d.key })
     var color = d3.scaleOrdinal()
         .domain(res)
         .range(['orange','purple','blue','brown'])
 
-    var x= d3.scaleLinear().domain([0,5000]).range([0,width]);
-    var y= d3.scaleLinear().domain([0,50000]).range([height,0]);
+    var x= d3.scaleLinear().domain([15,50]).range([0,width]);
+    var y= d3.scaleLinear().domain([10,40]).range([height,0]);
     // Add Y axis 
     console.log(sumstat[0].values)
-    var y = d3.scaleLinear()
-        .domain([0, 1.1*d3.max(sumstat[0].values, function(d) { return d.value.count; })])
-        .range([ height, 0 ]);
 
     d3.select('svg').append('g').attr("transform","translate(" + margin + "," + margin + ")")
         .call(d3.axisLeft(y));
@@ -148,13 +148,13 @@ function updateGraph(data, sumstat){
             // if(d["name"]=="Singapore"){
             //     tx=xscale(d["Popularity"]);
             // } 
-            return x(d["Popularity"]);
+            return x(d["highway MPG"]);
         })
         .attr('cy',function(d) {
             // if(d["name"]=="Singapore"){
             //     ty=yscale(d["Economy.GDP.per.Capita."])
             // }      
-            return y(d["MSRP"]);
+            return y(d["city mpg"]);
         })
         .style("fill", "white")
         .style("stroke", function(d){ return color(d["Vehicle Size"]) })
