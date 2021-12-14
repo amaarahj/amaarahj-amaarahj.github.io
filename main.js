@@ -2,7 +2,7 @@ window.dive1 = '';
 window.dive2 = '';
 var height = 300;
 var width = 800;
-var margin = 50;
+var margin = 75;
 var svg1 = d3.select("#my_dataviz1")
 .append("svg")
     .attr("width", width + margin + margin)
@@ -18,7 +18,7 @@ var svg2 = d3.select("#my_dataviz2")
 .append("g")
     .attr("transform",
         "translate(" + margin + "," + margin + ")");
-var svg = d3.select("#my_dataviz")
+var svg3 = d3.select("#my_dataviz")
 .append("svg")
     .attr("width", width + margin + margin)
     .attr("height", height + margin + margin)
@@ -221,12 +221,34 @@ function AddDropDownList(makes) {
     dvContainer.appendChild(ddlMakes);
 };
 
+function nav(){
+    var list = document.getElementsByClassName("nav")
+    if (window.dive1){
+        list[0].innerText = window.dive1;
+    }
+    if (window.dive2){
+        list[1].innerText = window.dive2;
+    }
+}
+
+function back1(e){
+    console.log(e);
+    window.dive1 = ''
+}
+function back2(e){
+    console.log(e);
+    window.dive2 = ''
+    // graph2()
+}
 d3.csv("./data.csv", function(data) {   
+    nav()
     graph1(data)
 })
 
-function graph3(){    
-    d3.selectAll("#my_dataviz2").remove();
+function graph3(){ 
+    nav()   
+    // d3.selectAll("#my_dataviz2").remove();
+    // d3.selectAll("g>*").remove();
     d3.csv("./data.csv", function(data) {   
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
             .key(function(d) {
@@ -281,12 +303,12 @@ function updateGraph(data, sumstat){
     // Add Y axis 
     console.log(sumstat[0].values)
 
-    d3.select('svg').append('g').attr("transform","translate(" + margin + "," + margin + ")")
-        .call(d3.axisLeft(y));
-    d3.select('svg').append('g').attr("transform","translate(" + margin + ","+(height+margin)+")")
+    svg3.append("g")
+        .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x));
-
-    svg.append("g").selectAll('circle').data(sumstat[0].values).enter().append('circle')
+    svg3.append("g")
+        .call(d3.axisLeft(y));
+    svg3.append("g").selectAll('circle').data(sumstat[0].values).enter().append('circle')
         .attr('cx',function(d) {
             // if(d["name"]=="Singapore"){
             //     tx=xscale(d["Popularity"]);
@@ -303,10 +325,30 @@ function updateGraph(data, sumstat){
         .style("stroke", function(d){ return color(d["Vehicle Size"]) })
         .attr('r', 4)
 
+    svg3.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", 0 - (margin / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "20px") 
+        .text(window.dive1 + " City MPG vs Highway MPG in " + window.dive2)
+    svg3.append('text')
+        .attr('x', -(height / 2) )
+        .attr('y', -(margin/2))
+        .attr('transform', 'rotate(-90)')
+        .attr('text-anchor', 'middle')
+        .text('City MPG')
+    svg3.append('text')
+        .attr('x', width / 2 )
+        .attr('y', height + 40 )
+        .attr('text-anchor', 'middle')
+        .text('Highway MPG')
+
 }
 
 function graph2(){
-    d3.selectAll("#my_dataviz1").remove();
+    nav()
+    // d3.selectAll("#my_dataviz1").remove();
+    // d3.selectAll("g>*").remove();
     d3.csv("./data.csv", function(data) {   
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
             .key(function(d) {
@@ -382,11 +424,27 @@ function updateGraph2(data, sumstat){
         .duration(1000)
             .attr("x", function(d) { return x(d.key); })
             .attr("y", function(d) { return y(d.value.count); })
-            .attr("width", 5)
+            .attr("width", 25)
             // .attr("width", x.bandwidth())
             .attr("height", function(d) { return height - y(d.value.count); })
             .attr("fill", "#69b3a2")
-
+    svg2.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", 0 - (margin / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "20px") 
+        .text(window.dive1)
+    svg2.append('text')
+        .attr('x', -(height / 2) )
+        .attr('y', -margin/3-(margin/3))
+        .attr('transform', 'rotate(-90)')
+        .attr('text-anchor', 'middle')
+        .text('Vehicle Count')
+    svg2.append('text')
+        .attr('x', width / 2 )
+        .attr('y', height + 40 )
+        .attr('text-anchor', 'middle')
+        .text('Year')
 }
 
 function graph1(data){
@@ -461,5 +519,21 @@ function updateGraph1(data, sumstat){
             .attr("width", x.bandwidth())
             .attr("height", function(d) { return height - y(d["Count"]); })
             .attr("fill", "#69b3a2")
-
+    svg1.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", 0 - (margin / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "20px") 
+        .text("Transmissions")
+    svg1.append('text')
+        .attr('x', -(height / 2) )
+        .attr('y',-margin/3 -margin/3)
+        .attr('transform', 'rotate(-90)')
+        .attr('text-anchor', 'middle')
+        .text('Vehicle Count')
+    svg1.append('text')
+        .attr('x', width / 2 )
+        .attr('y', height + 40 )
+        .attr('text-anchor', 'middle')
+        .text('Transmission Type')
 }
