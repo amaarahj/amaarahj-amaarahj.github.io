@@ -83,7 +83,8 @@ function AddDropDownList(makes) {
     dvContainer.appendChild(ddlMakes);
 };
 
-d3.csv("./data.csv", function(data) {   
+d3.csv("./data.csv", function(data) { 
+    console.log(window.dive1)  
     var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) {
             return d["Transmission Type"];
