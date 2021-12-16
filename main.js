@@ -3,29 +3,8 @@ window.dive2 = '';
 var height = 300;
 var width = 800;
 var margin = 75;
-// var svg1 = d3.select("#my_dataviz1")
-// .append("svg")
-//     .attr("width", width + margin + margin)
-//     .attr("height", height + margin + margin)
-// .append("g")
-//     .attr("transform",
-//         "translate(" + margin + "," + margin + ")");
 
-// var svg2 = d3.select("#my_dataviz2")
-// .append("svg")
-//     .attr("width", width + margin + margin)
-//     .attr("height", height + margin + margin)
-// .append("g")
-//     .attr("transform",
-//         "translate(" + margin + "," + margin + ")");
-// var svg3 = d3.select("#my_dataviz")
-// .append("svg")
-//     .attr("width", width + margin + margin)
-//     .attr("height", height + margin + margin)
-// .append("g")
-//     .attr("transform",
-//         "translate(" + margin + "," + margin + ")");
-// get type for each year and filter by make
+
 function filterJSON1(json, key, selected) {
     var result = [];            
         
@@ -223,6 +202,7 @@ function AddDropDownList(makes) {
 
 function nav(){
     var list = document.getElementsByClassName("nav")
+    list[0].innerText = list[1].innerText= '';
     if (window.dive1){
         list[0].innerText = window.dive1;
     }
@@ -234,16 +214,16 @@ function nav(){
 function back1(e){
     console.log(e);
     window.dive1 = ''
+    graph1()
 }
 function back2(e){
     console.log(e);
     window.dive2 = ''
-    // graph2()
+    graph2()
 }
-d3.csv("./data.csv", function(data) {   
-    nav()
-    graph1(data)
-})
+
+graph1()
+
 
 function graph3(){ 
     nav()   
@@ -354,9 +334,8 @@ function updateGraph(data, sumstat){
 }
 
 function graph2(){
+    window.dive2 = '';
     nav()
-    // d3.selectAll("#my_dataviz1").remove();
-    // d3.selectAll("g>*").remove();
     d3.selectAll('svg').remove();
     d3.csv("./data.csv", function(data) {   
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
@@ -463,32 +442,38 @@ function updateGraph2(data, sumstat){
         .text('Year')
 }
 
-function graph1(data){
-    var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
-        .key(function(d) { return d.Make;})
-        .sortKeys(d3.ascending)
-        .entries(data);
-    var res = sumstat.map(function(d){ return d.key }) // list of make names
-    console.log(res);
-    AddDropDownList(res)
+function graph1(){
+    window.dive1 = '';
+    window.dive2 = '';
+    nav()
+    d3.selectAll('svg').remove();
+    d3.csv("./data.csv", function(data) {   
+        var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
+            .key(function(d) { return d.Make;})
+            .sortKeys(d3.ascending)
+            .entries(data);
+        var res = sumstat.map(function(d){ return d.key }) // list of make names
+        console.log(res);
+        AddDropDownList(res)
 
-    d3.select('#inds')
-    .on("change", function () {
-        var sect = document.getElementById("inds");
-        var section = sect.options[sect.selectedIndex].value;
-        console.log(section)
-        fd = filterJSON1(data, 'Make', section);
-                    
-        d3.selectAll("g>*").remove();
+        d3.select('#inds')
+        .on("change", function () {
+            var sect = document.getElementById("inds");
+            var section = sect.options[sect.selectedIndex].value;
+            console.log(section)
+            fd = filterJSON1(data, 'Make', section);
+                        
+            d3.selectAll("g>*").remove();
+            updateGraph1(data, fd);
+            
+            console.log(window.dive1)  
+        });
+        // middle not used?
+        fd = filterJSON1(data, 'Make', 'All');
         updateGraph1(data, fd);
-        
-        console.log(window.dive1)  
-    });
-    // middle not used?
-    fd = filterJSON1(data, 'Make', 'All');
-    updateGraph1(data, fd);
-
+    })
 }
+
 function updateGraph1(data, sumstat){  
     var svg1 = d3.select("#my_dataviz")
         .append("svg")
