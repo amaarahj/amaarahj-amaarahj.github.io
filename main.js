@@ -3,28 +3,28 @@ window.dive2 = '';
 var height = 300;
 var width = 800;
 var margin = 75;
-var svg1 = d3.select("#my_dataviz1")
-.append("svg")
-    .attr("width", width + margin + margin)
-    .attr("height", height + margin + margin)
-.append("g")
-    .attr("transform",
-        "translate(" + margin + "," + margin + ")");
+// var svg1 = d3.select("#my_dataviz1")
+// .append("svg")
+//     .attr("width", width + margin + margin)
+//     .attr("height", height + margin + margin)
+// .append("g")
+//     .attr("transform",
+//         "translate(" + margin + "," + margin + ")");
 
-var svg2 = d3.select("#my_dataviz2")
-.append("svg")
-    .attr("width", width + margin + margin)
-    .attr("height", height + margin + margin)
-.append("g")
-    .attr("transform",
-        "translate(" + margin + "," + margin + ")");
-var svg3 = d3.select("#my_dataviz")
-.append("svg")
-    .attr("width", width + margin + margin)
-    .attr("height", height + margin + margin)
-.append("g")
-    .attr("transform",
-        "translate(" + margin + "," + margin + ")");
+// var svg2 = d3.select("#my_dataviz2")
+// .append("svg")
+//     .attr("width", width + margin + margin)
+//     .attr("height", height + margin + margin)
+// .append("g")
+//     .attr("transform",
+//         "translate(" + margin + "," + margin + ")");
+// var svg3 = d3.select("#my_dataviz")
+// .append("svg")
+//     .attr("width", width + margin + margin)
+//     .attr("height", height + margin + margin)
+// .append("g")
+//     .attr("transform",
+//         "translate(" + margin + "," + margin + ")");
 // get type for each year and filter by make
 function filterJSON1(json, key, selected) {
     var result = [];            
@@ -249,6 +249,7 @@ function graph3(){
     nav()   
     // d3.selectAll("#my_dataviz2").remove();
     // d3.selectAll("g>*").remove();
+    d3.selectAll('svg').remove();
     d3.csv("./data.csv", function(data) {   
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
             .key(function(d) {
@@ -286,7 +287,14 @@ function graph3(){
     })
 }
 
-function updateGraph(data, sumstat){    
+function updateGraph(data, sumstat){  
+    var svg3 = d3.select("#my_dataviz")
+        .append("svg")
+            .attr("width", width + margin + margin)
+            .attr("height", height + margin + margin)
+        .append("g")
+            .attr("transform",
+                "translate(" + margin + "," + margin + ")");  
     var group = d3.nest()
         .key(function(d){return d["Vehicle Size"]})
         .sortKeys(d3.ascending)
@@ -349,6 +357,7 @@ function graph2(){
     nav()
     // d3.selectAll("#my_dataviz1").remove();
     // d3.selectAll("g>*").remove();
+    d3.selectAll('svg').remove();
     d3.csv("./data.csv", function(data) {   
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
             .key(function(d) {
@@ -380,7 +389,14 @@ function graph2(){
     })
     
 };
-function updateGraph2(data, sumstat){    
+function updateGraph2(data, sumstat){ 
+    var svg2 = d3.select("#my_dataviz")
+        .append("svg")
+            .attr("width", width + margin + margin)
+            .attr("height", height + margin + margin)
+        .append("g")
+            .attr("transform",
+                "translate(" + margin + "," + margin + ")");   
     var yy = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d.Year;})
         .sortKeys(d3.ascending)
@@ -473,7 +489,14 @@ function graph1(data){
     updateGraph1(data, fd);
 
 }
-function updateGraph1(data, sumstat){    
+function updateGraph1(data, sumstat){  
+    var svg1 = d3.select("#my_dataviz")
+        .append("svg")
+            .attr("width", width + margin + margin)
+            .attr("height", height + margin + margin)
+        .append("g")
+            .attr("transform",
+                "translate(" + margin + "," + margin + ")");  
     var yy = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d.Year;})
         .sortKeys(d3.ascending)
