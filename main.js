@@ -255,8 +255,6 @@ function graph3(){
             return d.key == window.dive2;
         })
         var res = sumstat[0].values.map(function(d){ return d.key }) // list of make names
-        console.log("drop down");
-        console.log(res);
         AddDropDownList(res);
         
         // Legend
@@ -267,7 +265,7 @@ function graph3(){
         var res = group.map(function(d){ return d.key });
         var color = d3.scaleOrdinal()
             .domain(res)
-            .range(['orange','purple','blue','brown'])
+            .range(['lightblue', 'orange', 'lightgreen', 'pink'])
         var legend = d3.select("#legendContainer")
             .append("svg")
                 .attr("width", 70)
@@ -280,7 +278,6 @@ function graph3(){
             .attr("x", 0)
             .attr("y", function (d, i) { return 0 +i*15; })  // spacing
             .attr("fill",function(d) { 
-                console.log(d.key);
                 return color(d.key);		    
             })
         legend.selectAll("text")
@@ -289,8 +286,7 @@ function graph3(){
             .attr("x", 15)
             .attr("y", function(d,i){return 10 +i*15;})
             .attr("class", "legend")
-            .text(function(d){
-                console.log(d.key);return d.key;
+            .text(function(d){return d.key;
         });
 
         d3.select('#inds')
@@ -311,16 +307,15 @@ function graph3(){
 }
 
 function updateGraph(svg3, data, sumstat,color){  
-    var minx = d3.min(sumstat[0].values, function(d) { return d["highway MPG"]; })
-    var maxx = d3.max(sumstat[0].values, function(d) { return d["highway MPG"]; })
-    var x= d3.scaleLinear().domain([minx/1.1,maxx*1.1]).range([0,width]);
+    var minx = d3.min(sumstat[0].values, function(d) { return +d["MSRP"]; })
+    var maxx = d3.max(sumstat[0].values, function(d) { return +d["MSRP"]; })
+    var x= d3.scaleLog().domain([minx/1.1,maxx*1.1]).range([0,width]).nice();
     
-    var miny = d3.min(sumstat[0].values, function(d) { return d["city mpg"]; })
-    var maxy = d3.max(sumstat[0].values, function(d) { return d["city mpg"]; })    
-    var y= d3.scaleLinear().domain([miny/1.1,maxy*1.1]).range([height,0]);
+    var miny = d3.min(sumstat[0].values, function(d) { return +d["city mpg"]; })
+    var maxy = d3.max(sumstat[0].values, function(d) { return +d["city mpg"]; })    
+    var y= d3.scaleLinear().domain([miny/1.1,maxy*1.1]).range([height,0]).nice();
     // Add Y axis 
-    console.log(sumstat[0].values)
-
+    console.log("cars" );
     svg3.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x));
@@ -328,14 +323,14 @@ function updateGraph(svg3, data, sumstat,color){
         .call(d3.axisLeft(y));
     // create a Voronoi diagram based on the data and the scales
     const voronoiDiagram = d3.voronoi()
-        .x(function(d) {return x(d["highway MPG"]);})
+        .x(function(d) {return x(d["MSRP"]);})
         .y(function(d) {return y(d["city mpg"]);})
         .size([width, height])(sumstat[0].values);
     const voronoiRadius = width / 10;
     const pointRadius = 1;
     svg3.append("g").selectAll('circle').data(sumstat[0].values).enter().append('circle')
         .attr('cx',function(d) { 
-            return x(d["highway MPG"]);
+            return x(d["MSRP"]);
         })
         .attr('cy',function(d) {  
             return y(d["city mpg"]);
@@ -349,7 +344,7 @@ function updateGraph(svg3, data, sumstat,color){
         .attr("y", 0 - (margin / 2))
         .attr("text-anchor", "middle")  
         .style("font-size", "20px") 
-        .text(window.dive1 + " City MPG and Highway MPG in " + window.dive2)
+        .text("City MPG vs MSRP for " + window.dive1 + " Cars in " + window.dive2)
     svg3.append('text')
         .attr('x', -(height / 2) )
         .attr('y', -(margin/2))
@@ -360,7 +355,7 @@ function updateGraph(svg3, data, sumstat,color){
         .attr('x', width / 2 )
         .attr('y', height + 40 )
         .attr('text-anchor', 'middle')
-        .text('Highway MPG')
+        .text('MSRP ')
     // add a circle for indicating the highlighted point
     svg3.append('circle')
         .attr('class', 'highlight-circle')
@@ -399,13 +394,13 @@ function updateGraph(svg3, data, sumstat,color){
                     "<br>" +
                     "<strong> Model: </strong>" + d["Model"] + 
                     "<br>" +
-                    "<strong> MSRP: $</strong>" + d["MSRP"] + 
+                    "<strong> MSRP: </strong>$" + Number(d["MSRP"]).toLocaleString('en-US') + 
                     "<br>" +
                     "<strong> Popularity: </strong>" + d["Popularity"]);                            
             d3.select('.highlight-circle')
                 .style('display', '')
                 .style('stroke', color(d["Vehicle Size"]))
-                .attr('cx', x(d["highway MPG"]))
+                .attr('cx', x(d["MSRP"]))
                 .attr('cy', y(d["city mpg"]));
         }
     }
@@ -448,7 +443,6 @@ function graph2(){
             return d.key == window.dive1;
         })
         var res = sumstat[0].values.map(function(d){ return d.key }) // list of make names
-        console.log(res);
         AddDropDownList(res)
 
         d3.select('#inds')
@@ -474,18 +468,15 @@ function updateGraph2(svg2, data, sumstat){
         .sortKeys(d3.ascending)
         .entries(data);    
     var ry = yy.map(function(d){ return d.key }) // list of make names
-    console.log(sumstat)// Add X axis --> it is a date format
-    var x = d3.scaleTime()
-        .domain(d3.extent(sumstat[0].values, function(d) {return d.key; }))
-    // .domain(d3.extent(data, function(d) { return d.Year; }))
-        .range([ 0, width ])  
-        // .domain(sumstat[0].data.map(function(d) { return d.TransType; }))
-        // .padding(0.2);
+    // Add X axis --> it is a date format
+    var x = d3.scaleBand()
+        .domain(ry)
+        .range([ 0, width ]) 
+        .padding(0.2); 
     svg2.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x).tickValues(ry).tickFormat(d3.format("")));
     // Add Y axis 
-    console.log(sumstat[0].values)
     var y = d3.scaleLinear()
         .domain([0, 1.1*d3.max(sumstat[0].values, function(d) { return d.value.count; })])
         .range([ height, 0 ]);
@@ -526,10 +517,9 @@ function updateGraph2(svg2, data, sumstat){
         .duration(1000)
             .attr("x", function(d) { return x(d.key); })
             .attr("y", function(d) { return y(d.value.count); })
-            .attr("width", 25)
-            // .attr("width", x.bandwidth())
+            .attr("width", x.bandwidth())
             .attr("height", function(d) { return height - y(d.value.count); })
-            .attr("fill", "#69b3a2")
+            .attr("fill", "#7C59BF")
     svg2.append("text")
         .attr("x", (width / 2))             
         .attr("y", 0 - (margin / 2))
@@ -633,7 +623,7 @@ function updateGraph1(svg1, data, sumstat){
             .attr("y", function(d) { return y(d["Count"]); })
             .attr("width", x.bandwidth())
             .attr("height", function(d) { return height - y(d["Count"]); })
-            .attr("fill", "#69b3a2")
+            .attr("fill", "#7C59BF")
     svg1.selectAll(".text")
         .data(sumstat[0].data)
         .enter()
