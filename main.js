@@ -202,12 +202,16 @@ function AddDropDownList(makes) {
 
 function nav(){
     var list = document.getElementsByClassName("nav")
-    list[0].innerText = list[1].innerText= '';
+    list[0].innerText = "MAIN";
+    list[1].innerText = list[3].innerText= '';
+    list[2].innerText = list[4].innerText= '';
     if (window.dive1){
-        list[0].innerText = window.dive1;
+        list[1].innerText = ">";
+        list[2].innerText = window.dive1;
     }
     if (window.dive2){
-        list[1].innerText = window.dive2;
+        list[3].innerText = ">";
+        list[4].innerText = window.dive2;
     }
 }
 
@@ -392,6 +396,8 @@ function updateGraph(svg3, data, sumstat,color){
             divTooltip.style("left", (d3.event.pageX) + "px")		
                 .style("top", (d3.event.pageY - 28) + "px")
                 .html("<strong> Make: </strong>"+ d["Make"] + 
+                    "<br>" +
+                    "<strong> Model: </strong>" + d["Model"] + 
                     "<br>" +
                     "<strong> MSRP: $</strong>" + d["MSRP"] + 
                     "<br>" +
