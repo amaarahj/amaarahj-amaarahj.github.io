@@ -253,8 +253,42 @@ function graph3(){
         var res = sumstat[0].values.map(function(d){ return d.key }) // list of make names
         console.log("drop down");
         console.log(res);
-        AddDropDownList(res)
-    
+        AddDropDownList(res);
+        
+        // Legend
+        var group = d3.nest()
+            .key(function(d){return d["Vehicle Size"]})
+            .sortKeys(d3.ascending)
+            .entries(data);
+        var res = group.map(function(d){ return d.key });
+        var color = d3.scaleOrdinal()
+            .domain(res)
+            .range(['orange','purple','blue','brown'])
+        var legend = d3.select("#legendContainer")
+            .append("svg")
+                .attr("width", 70)
+                .attr("height", 50)
+        legend.selectAll("rect")
+            .data(group.slice())
+            .enter().append("rect")
+            .attr("width", 10)
+            .attr("height", 10)
+            .attr("x", 0)
+            .attr("y", function (d, i) { return 0 +i*15; })  // spacing
+            .attr("fill",function(d) { 
+                console.log(d.key);
+                return color(d.key);		    
+            })
+        legend.selectAll("text")
+            .data(group.slice())
+            .enter().append("text")
+            .attr("x", 15)
+            .attr("y", function(d,i){return 10 +i*15;})
+            .attr("class", "legend")
+            .text(function(d){
+                console.log(d.key);return d.key;
+        });
+
         d3.select('#inds')
         .on("change", function () {
             var sect = document.getElementById("inds");
@@ -263,27 +297,23 @@ function graph3(){
             fd = filterJSON(data, window.dive1, window.dive2, section);
                         
             d3.selectAll("g>*").remove();
-            updateGraph(svg3, data, fd);
+            updateGraph(svg3, data, fd, color);
         });
         // middle used as global
         fd = filterJSON(data, window.dive1, window.dive2, 'All');
-        updateGraph(svg3, data, fd);
+        updateGraph(svg3, data, fd, color);
     
     })
 }
 
-function updateGraph(svg3, data, sumstat){  
-   var group = d3.nest()
-        .key(function(d){return d["Vehicle Size"]})
-        .sortKeys(d3.ascending)
-        .entries(data);
-    var res = group[0].values.map(function(d){ return d.key })
-    var color = d3.scaleOrdinal()
-        .domain(res)
-        .range(['orange','purple','blue','brown'])
-
-    var x= d3.scaleLinear().domain([15,50]).range([0,width]);
-    var y= d3.scaleLinear().domain([10,40]).range([height,0]);
+function updateGraph(svg3, data, sumstat,color){  
+    var minx = d3.min(sumstat[0].values, function(d) { return d["highway MPG"]; })
+    var maxx = d3.max(sumstat[0].values, function(d) { return d["highway MPG"]; })
+    var x= d3.scaleLinear().domain([minx/1.1,maxx*1.1]).range([0,width]);
+    
+    var miny = d3.min(sumstat[0].values, function(d) { return d["city mpg"]; })
+    var maxy = d3.max(sumstat[0].values, function(d) { return d["city mpg"]; })    
+    var y= d3.scaleLinear().domain([miny/1.1,maxy*1.1]).range([height,0]);
     // Add Y axis 
     console.log(sumstat[0].values)
 
