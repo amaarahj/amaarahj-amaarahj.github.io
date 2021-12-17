@@ -1,0 +1,67 @@
+body {
+    text-align: center; 
+}
+.guide{
+    font-style: italic;
+}
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: white;
+  }
+li {
+    float: left;
+  }
+li a {
+    display: block;
+    color: rgb(14, 13, 13);
+    text-align: center;
+    padding: 4px 16px;
+    text-decoration: none;
+  }
+
+.navCentered  {
+    float: none;
+    position: absolute;
+    top: 2%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.active {
+    background-color: rgb(250, 252, 178);
+  }
+.footer{
+    margin-top: 100px;
+}
+div.tooltip {   
+    position: absolute;           
+    text-align: center;           
+    width: 180px;                  
+    height: 40px;                 
+    padding: 2px;             
+    font: 12px sans-serif;        
+    background: white; 
+    border-color: black;  
+    border: 2px;      
+    border-radius: 2px;           
+    pointer-events: none;         
+  }
+  .legendContainer {
+    padding: 5px;
+    width: 150px;
+    height: 50px;
+    font: 10px sans-serif;
+  }
+  .divContainer {
+    flex-direction: row;
+    display: flex;
+    padding-top: 20px;
+  }
+  .paramContainer{
+    flex-direction: column;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: flex-start;
+  }

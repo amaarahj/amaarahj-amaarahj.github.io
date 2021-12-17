@@ -3,6 +3,9 @@ window.dive2 = '';
 var height = 300;
 var width = 800;
 var margin = 75;
+var divTooltip = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
 
 
 function filterJSON1(json, key, selected) {
@@ -230,6 +233,13 @@ function graph3(){
     // d3.selectAll("#my_dataviz2").remove();
     // d3.selectAll("g>*").remove();
     d3.selectAll('svg').remove();
+    var svg3 = d3.select("#my_dataviz")
+        .append("svg")
+            .attr("width", width + margin + margin)
+            .attr("height", height + margin + margin)
+        .append("g")
+            .attr("transform",
+                "translate(" + margin + "," + margin + ")");  
     d3.csv("./data.csv", function(data) {   
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
             .key(function(d) {
@@ -258,29 +268,20 @@ function graph3(){
             fd = filterJSON(data, window.dive1, window.dive2, section);
                         
             d3.selectAll("g>*").remove();
-            updateGraph(data, fd);
+            updateGraph(svg3, data, fd);
         });
         // middle used as global
         fd = filterJSON(data, window.dive1, window.dive2, 'All');
-        updateGraph(data, fd);
+        updateGraph(svg3, data, fd);
     
     })
 }
 
-function updateGraph(data, sumstat){  
-    var svg3 = d3.select("#my_dataviz")
-        .append("svg")
-            .attr("width", width + margin + margin)
-            .attr("height", height + margin + margin)
-        .append("g")
-            .attr("transform",
-                "translate(" + margin + "," + margin + ")");  
-    var group = d3.nest()
+function updateGraph(svg3, data, sumstat){  
+   var group = d3.nest()
         .key(function(d){return d["Vehicle Size"]})
         .sortKeys(d3.ascending)
         .entries(data);
-    // console.log("group")
-    // console.log(group)
     var res = group[0].values.map(function(d){ return d.key })
     var color = d3.scaleOrdinal()
         .domain(res)
@@ -296,17 +297,18 @@ function updateGraph(data, sumstat){
         .call(d3.axisBottom(x));
     svg3.append("g")
         .call(d3.axisLeft(y));
+    // create a Voronoi diagram based on the data and the scales
+    const voronoiDiagram = d3.voronoi()
+        .x(function(d) {return x(d["highway MPG"]);})
+        .y(function(d) {return y(d["city mpg"]);})
+        .size([width, height])(sumstat[0].values);
+    const voronoiRadius = width / 10;
+    const pointRadius = 1;
     svg3.append("g").selectAll('circle').data(sumstat[0].values).enter().append('circle')
-        .attr('cx',function(d) {
-            // if(d["name"]=="Singapore"){
-            //     tx=xscale(d["Popularity"]);
-            // } 
+        .attr('cx',function(d) { 
             return x(d["highway MPG"]);
         })
-        .attr('cy',function(d) {
-            // if(d["name"]=="Singapore"){
-            //     ty=yscale(d["Economy.GDP.per.Capita."])
-            // }      
+        .attr('cy',function(d) {  
             return y(d["city mpg"]);
         })
         .style("fill", "white")
@@ -318,7 +320,7 @@ function updateGraph(data, sumstat){
         .attr("y", 0 - (margin / 2))
         .attr("text-anchor", "middle")  
         .style("font-size", "20px") 
-        .text(window.dive1 + " City MPG vs Highway MPG in " + window.dive2)
+        .text(window.dive1 + " City MPG and Highway MPG in " + window.dive2)
     svg3.append('text')
         .attr('x', -(height / 2) )
         .attr('y', -(margin/2))
@@ -330,13 +332,80 @@ function updateGraph(data, sumstat){
         .attr('y', height + 40 )
         .attr('text-anchor', 'middle')
         .text('Highway MPG')
+    // add a circle for indicating the highlighted point
+    svg3.append('circle')
+        .attr('class', 'highlight-circle')
+        .attr('r', pointRadius + 2) 
+        .style('fill', 'none')
+        .style('display', 'none');
+        // add the overlay on top of everything to take the mouse events
+    svg3.append('rect')
+        .attr('class', 'overlay')
+        .attr('width', width)
+        .attr('height', height)
+        .style('fill', '#f00')
+        .style('opacity', 0)
+        .on('mousemove', mouseMoveHandler)
+        .on('mouseleave', () => {
+            // hide the highlight circle when the mouse leaves the chart
+            highlight(null);
+        });    
 
+    // // callback to highlight a point
+    function highlight(d) {
+        // no point to highlight - hide the circle
+        if (!d) {
+            d3.select('.highlight-circle').style('display', 'none');
+            divTooltip.transition()		
+                .duration(500)		
+                .style("opacity", 0);
+        // otherwise, show the highlight circle at the correct position
+        } else {
+            divTooltip.transition()		
+                .duration(200)		
+                .style("opacity", .9);
+            divTooltip.style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px")
+                .html("<strong> Make: </strong>"+ d["Make"] + 
+                    "<br>" +
+                    "<strong> MSRP: $</strong>" + d["MSRP"] + 
+                    "<br>" +
+                    "<strong> Popularity: </strong>" + d["Popularity"]);                            
+            d3.select('.highlight-circle')
+                .style('display', '')
+                .style('stroke', color(d["Vehicle Size"]))
+                .attr('cx', x(d["highway MPG"]))
+                .attr('cy', y(d["city mpg"]));
+        }
+    }
+
+    // callback for when the mouse moves across the overlay
+    function mouseMoveHandler() {
+        // get the current mouse position
+        const [mx, my] = d3.mouse(this);
+
+        // use the new diagram.find() function to find the Voronoi site
+        // closest to the mouse, limited by max distance voronoiRadius
+        const site = voronoiDiagram.find(mx, my, voronoiRadius);
+
+        // highlight the point if we found one
+        highlight(site && site.data);
+        
+    }
 }
+
 
 function graph2(){
     window.dive2 = '';
     nav()
     d3.selectAll('svg').remove();
+    var svg2 = d3.select("#my_dataviz")
+        .append("svg")
+            .attr("width", width + margin + margin)
+            .attr("height", height + margin + margin)
+        .append("g")
+            .attr("transform",
+                "translate(" + margin + "," + margin + ")");   
     d3.csv("./data.csv", function(data) {   
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
             .key(function(d) {
@@ -360,22 +429,15 @@ function graph2(){
             fd = filterJSON2(data, window.dive1, section);
                         
             d3.selectAll("g>*").remove();
-            updateGraph2(data, fd);
+            updateGraph2(svg2, data, fd);
         });
         // middle used as global
         fd = filterJSON2(data, window.dive1, 'All');
-        updateGraph2(data, fd);
+        updateGraph2(svg2, data, fd);
     })
     
 };
-function updateGraph2(data, sumstat){ 
-    var svg2 = d3.select("#my_dataviz")
-        .append("svg")
-            .attr("width", width + margin + margin)
-            .attr("height", height + margin + margin)
-        .append("g")
-            .attr("transform",
-                "translate(" + margin + "," + margin + ")");   
+function updateGraph2(svg2, data, sumstat){ 
     var yy = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d.Year;})
         .sortKeys(d3.ascending)
@@ -383,7 +445,7 @@ function updateGraph2(data, sumstat){
     var ry = yy.map(function(d){ return d.key }) // list of make names
     console.log(sumstat)// Add X axis --> it is a date format
     var x = d3.scaleTime()
-    .domain(d3.extent(sumstat[0].values, function(d) {return d.key; }))
+        .domain(d3.extent(sumstat[0].values, function(d) {return d.key; }))
     // .domain(d3.extent(data, function(d) { return d.Year; }))
         .range([ 0, width ])  
         // .domain(sumstat[0].data.map(function(d) { return d.TransType; }))
@@ -396,23 +458,37 @@ function updateGraph2(data, sumstat){
     var y = d3.scaleLinear()
         .domain([0, 1.1*d3.max(sumstat[0].values, function(d) { return d.value.count; })])
         .range([ height, 0 ]);
-    // if (sumstat.length ==48){
-    //     y= d3.scaleLinear()
-    //     .domain([0, 2])
-    //     .range([ height, 0 ]);
-    // } get largest y from automated
     svg2.append("g")
     .call(d3.axisLeft(y));
+
     var u = svg2.selectAll("rect")
         .data(sumstat[0].values)
     u
         .enter()
         .append("rect")
-        .on('click', function (d) {
-            console.log(d)            
+        .on('click', function(d) { 
+            divTooltip.transition()		
+                .duration(100)		
+                .style("opacity", 0);         
             window.dive2=d.key;
             graph3();
-            // window.location.href = "third.html";
+        })
+        .on('mouseenter', function (d) {
+            d3.select(this).attr('opacity', 0.5)
+        })	
+        .on("mouseover", function(d) {
+            divTooltip.transition()		
+                .duration(200)		
+                .style("opacity", .9);
+            divTooltip.style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px")
+                .html("<strong> Count: </strong>" + d.value.count);                            
+            })				
+        .on("mouseout", function(d) {            		
+            divTooltip.transition()		
+            .duration(500)		
+            .style("opacity", 0);	
+            d3.select(this).attr('opacity', 1);
         })
         .merge(u)
         .transition()
@@ -447,6 +523,13 @@ function graph1(){
     window.dive2 = '';
     nav()
     d3.selectAll('svg').remove();
+    var svg1 = d3.select("#my_dataviz")
+        .append("svg")
+            .attr("width", width + margin + margin)
+            .attr("height", height + margin + margin)
+        .append("g")
+            .attr("transform",
+                "translate(" + margin + "," + margin + ")");  
     d3.csv("./data.csv", function(data) {   
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
             .key(function(d) { return d.Make;})
@@ -464,60 +547,53 @@ function graph1(){
             fd = filterJSON1(data, 'Make', section);
                         
             d3.selectAll("g>*").remove();
-            updateGraph1(data, fd);
+            updateGraph1(svg1, data, fd);
             
             console.log(window.dive1)  
         });
         // middle not used?
         fd = filterJSON1(data, 'Make', 'All');
-        updateGraph1(data, fd);
+        updateGraph1(svg1, data, fd);
     })
 }
 
-function updateGraph1(data, sumstat){  
-    var svg1 = d3.select("#my_dataviz")
-        .append("svg")
-            .attr("width", width + margin + margin)
-            .attr("height", height + margin + margin)
-        .append("g")
-            .attr("transform",
-                "translate(" + margin + "," + margin + ")");  
-    var yy = d3.nest() // nest function allows to group the calculation per level of a factor
-        .key(function(d) { return d.Year;})
+function updateGraph1(svg1,data, sumstat){  
+    var tx = d3.nest() // nest function allows to group the calculation per level of a factor
+        .key(function(d) { return d["Transmission Type"];})
         .sortKeys(d3.ascending)
         .entries(data);
-    var ry = yy.map(function(d){ return d.key }) // list of make names
+    var types = tx.map(function(d){ return d.key }) // list of make names
     // Add X axis --> it is a date format
     var x = d3.scaleBand()
-        // .domain(d3.extent(data, function(d) { return d.Year; }))
         .range([ 0, width ])  
-        .domain(sumstat[0].data.map(function(d) { return d.TransType; }))
+        .domain(types)
         .padding(0.2);
     svg1.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x));
     // Add Y axis .tickValues(ry).tickFormat(d3.format(","))
-    // console.log(sumstat[0].data)
+    console.log(sumstat[0].data)
     var y = d3.scaleLinear()
         .domain([0, 1.1*d3.max(sumstat[0].data, function(d) { return d.Count; })])
         .range([ height, 0 ]);
-    // if (sumstat.length ==48){
-    //     y= d3.scaleLinear()
-    //     .domain([0, 2])
-    //     .range([ height, 0 ]);
-    // } get largest y from automated
+
     svg1.append("g")
     .call(d3.axisLeft(y));
+
     var u = svg1.selectAll("rect")
         .data(sumstat[0].data)
     u
         .enter()
         .append("rect")
-        .on('click', function (d) {
-            console.log(d.TransType)
+        .on('click', function (d) {	           
             window.dive1=d.TransType;
             graph2()
-            // window.location.href = "second.html";
+        })
+        .on('mouseenter', function(d) {
+            d3.select(this).attr('opacity', 0.5)
+        })					
+        .on("mouseout", function(d) {		
+            d3.select(this).attr('opacity', 1);
         })
         .merge(u)
         .transition()
@@ -527,6 +603,14 @@ function updateGraph1(data, sumstat){
             .attr("width", x.bandwidth())
             .attr("height", function(d) { return height - y(d["Count"]); })
             .attr("fill", "#69b3a2")
+    svg1.selectAll(".text")
+        .data(sumstat[0].data)
+        .enter()
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("x", (function(d) { return x(d.TransType)+ 60; }  ))
+        .attr("y", function(d) { return y(d.Count) - 10; })
+        .text(function(d) { return d.Count; })
     svg1.append("text")
         .attr("x", (width / 2))             
         .attr("y", 0 - (margin / 2))
