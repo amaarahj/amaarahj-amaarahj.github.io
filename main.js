@@ -181,12 +181,9 @@ function filterJSON(json, key, key2, selected) {
     return result;
 }
 function AddDropDownList(makes) {   
-    // var attr = document.getElementById("inds").getAttributeNode("OPTION"); 
-    // console.log(attr)
+    d3.selectAll("option").remove();
     var ddlMakes = document.getElementById("inds");
-    // ddlMakes.removeAttributeNode(attr)
     var option = document.createElement("OPTION");
-
     option.innerHTML = "All";
     option.value = "All";
     ddlMakes.options.add(option);
@@ -230,8 +227,6 @@ graph1()
 
 function graph3(){ 
     nav()   
-    // d3.selectAll("#my_dataviz2").remove();
-    // d3.selectAll("g>*").remove();
     d3.selectAll('svg').remove();
     var svg3 = d3.select("#my_dataviz")
         .append("svg")
@@ -394,7 +389,6 @@ function updateGraph(svg3, data, sumstat){
     }
 }
 
-
 function graph2(){
     window.dive2 = '';
     nav()
@@ -436,7 +430,8 @@ function graph2(){
         updateGraph2(svg2, data, fd);
     })
     
-};
+}
+
 function updateGraph2(svg2, data, sumstat){ 
     var yy = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d.Year;})
@@ -557,7 +552,7 @@ function graph1(){
     })
 }
 
-function updateGraph1(svg1,data, sumstat){  
+function updateGraph1(svg1, data, sumstat){  
     var tx = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d["Transmission Type"];})
         .sortKeys(d3.ascending)
