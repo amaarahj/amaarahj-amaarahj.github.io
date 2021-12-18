@@ -297,16 +297,16 @@ function graph3(){
             fd = filterJSON(data, window.dive1, window.dive2, section);
                         
             d3.selectAll("g>*").remove();
-            updateGraph(svg3, fd, color);
+            updateGraph(svg3, fd, color, false);
         });
         // middle used as global
         fd = filterJSON(data, window.dive1, window.dive2, 'All');
-        updateGraph(svg3, fd, color);
+        updateGraph(svg3, fd, color, true);
     
     })
 }
 
-function updateGraph(svg3, sumstat,color){  
+function updateGraph(svg3, sumstat,color, anno){  
     var minx = d3.min(sumstat[0].values, function(d) { return +d["MSRP"]; })
     var maxx = d3.max(sumstat[0].values, function(d) { return +d["MSRP"]; })
     var x= d3.scaleLog().domain([minx/1.1,maxx*1.1]).range([0,width]).nice();
@@ -431,23 +431,24 @@ function updateGraph(svg3, sumstat,color){
         }
     ]
     var annotations = []
-    if (window.dive2 =="2006"){
+    if (window.dive1 =="MANUAL" && window.dive2 =="2006"){
         annotations = first;
-    } else if( window.dive2 =="2012"){
+    } else if(window.dive1 =="DIRECT_DRIVE" && window.dive2 =="2012"){
         annotations = second;
-    } else if (window.dive2 =="2014"){
+    } else if (window.dive1 =="AUTOMATIC" && window.dive2 =="2014"){
         annotations = third;
-    }else if (window.dive2 =="2016"){
+    }else if (window.dive1 =="DIRECT_DRIVE" && window.dive2 =="2016"){
         annotations = fourth;
     }
-    
-        // Add annotation to the chart
-    const makeAnnotations = d3.annotation()
+    // Add annotation to the chart
+    if(anno){
+        const makeAnnotations = d3.annotation()
         .annotations(annotations)
         d3.select("svg")
         .append("g")
         .attr("class", "annotation-group")
-        .call(makeAnnotations)
+        .call(makeAnnotations)  
+    }
 
     // callback to highlight a point
     function highlight(d) {
@@ -527,16 +528,16 @@ function graph2(){
             fd = filterJSON2(data, window.dive1, section);
                         
             d3.selectAll("g>*").remove();
-            updateGraph2(svg2, data, fd);
+            updateGraph2(svg2, data, fd, false);
         });
         // middle used as global
         fd = filterJSON2(data, window.dive1, 'All');
-        updateGraph2(svg2, data, fd);
+        updateGraph2(svg2, data, fd, true);
     })
     
 }
 
-function updateGraph2(svg2, data, sumstat){ 
+function updateGraph2(svg2, data, sumstat, anno){ 
     var yy = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d.Year;})
         .sortKeys(d3.ascending)
@@ -605,7 +606,7 @@ function updateGraph2(svg2, data, sumstat){
         .attr('y', -margin/3-(margin/3))
         .attr('transform', 'rotate(-90)')
         .attr('text-anchor', 'middle')
-        .text('Vehicle Count')
+        .text('Car Count')
     svg2.append('text')
         .attr('x', width / 2 )
         .attr('y', height + 40 )
@@ -676,12 +677,14 @@ function updateGraph2(svg2, data, sumstat){
     }
 
     // Add annotation to the chart
-    const makeAnnotations = d3.annotation()
-    .annotations(annotations)
-    d3.select("svg")
-    .append("g")
-    .attr("class", "annotation-group")
-    .call(makeAnnotations)
+    if(anno){
+        const makeAnnotations = d3.annotation()
+        .annotations(annotations)
+        d3.select("svg")
+        .append("g")
+        .attr("class", "annotation-group")
+        .call(makeAnnotations)  
+    }
 }
 
 function graph1(){
@@ -713,23 +716,23 @@ function graph1(){
             fd = filterJSON1(data, section);
                         
             d3.selectAll("g>*").remove();
-            updateGraph1(svg1, data, fd);
+            updateGraph1(svg1, data, fd, false);
             
             console.log(window.dive1)  
         });
         fd = filterJSON1(data, 'All');
-        updateGraph1(svg1, data, fd);
+        updateGraph1(svg1, data, fd, true);
     })
 }
 
-function updateGraph1(svg1, data, sumstat){  
+function updateGraph1(svg1, data, sumstat, anno){  
     var tx = d3.nest() // nest function allows to group the calculation per level of a factor
         .key(function(d) { return d["Transmission Type"];})
         .sortKeys(d3.ascending)
         .entries(data);
     var types = tx.map(function(d){ return d.key }) // list of make names
     // Add X axis --> it is a date format
-    types.pop();
+    // types.pop();
     var x = d3.scaleBand()
         .range([ 0, width ])  
         .domain(types)
@@ -738,6 +741,7 @@ function updateGraph1(svg1, data, sumstat){
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x));
     // Add Y axis .tickValues(ry).tickFormat(d3.format(","))
+    // sumstat[0].data.pop()
     console.log(sumstat[0].data)
     var y = d3.scaleLinear()
         .domain([0, 1.1*d3.max(sumstat[0].data, function(d) { return d.Count; })])
@@ -788,7 +792,7 @@ function updateGraph1(svg1, data, sumstat){
         .attr('y',-margin/3 -margin/3)
         .attr('transform', 'rotate(-90)')
         .attr('text-anchor', 'middle')
-        .text('Vehicle Count')
+        .text('Car Count')
     svg1.append('text')
         .attr('x', width / 2 )
         .attr('y', height + 40 )
@@ -803,7 +807,7 @@ function updateGraph1(svg1, data, sumstat){
             connector: {
                 end: "dot" 
             },
-            x: 320,
+            x: 280,
             y: 170,
             dy: 25,
             dx: -25
@@ -814,7 +818,7 @@ function updateGraph1(svg1, data, sumstat){
             connector: {
                 end: "dot" 
             },
-            x: 720,
+            x: 670,
             y: 290,
             dy: -60,
             dx: -13
@@ -826,7 +830,7 @@ function updateGraph1(svg1, data, sumstat){
             connector: {
                 end: "dot" 
             },
-            x: 580,
+            x: 530,
             y: 375,
             dy: -40,
             dx: -1
@@ -834,10 +838,14 @@ function updateGraph1(svg1, data, sumstat){
     ]
 
     // Add annotation to the chart
-    const makeAnnotations = d3.annotation()
-    .annotations(annotations)
-    d3.select("svg")
-    .append("g")
-    .attr("class", "annotation-group")
-    .call(makeAnnotations)
+
+    if(anno){
+        const makeAnnotations = d3.annotation()
+        .annotations(annotations)
+        d3.select("svg")
+        .append("g")
+        .attr("class", "annotation-group")
+        .call(makeAnnotations)  
+    }
+
 }
