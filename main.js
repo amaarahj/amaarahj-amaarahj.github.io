@@ -8,7 +8,7 @@ var divTooltip = d3.select("body").append("div")
     .style("opacity", 0);
 
 
-function filterJSON1(json, key, selected) {
+function filterJSON1(json, selected) {
     var result = [];            
         
     if (selected == "All"){
@@ -297,16 +297,16 @@ function graph3(){
             fd = filterJSON(data, window.dive1, window.dive2, section);
                         
             d3.selectAll("g>*").remove();
-            updateGraph(svg3, data, fd, color);
+            updateGraph(svg3, fd, color);
         });
         // middle used as global
         fd = filterJSON(data, window.dive1, window.dive2, 'All');
-        updateGraph(svg3, data, fd, color);
+        updateGraph(svg3, fd, color);
     
     })
 }
 
-function updateGraph(svg3, data, sumstat,color){  
+function updateGraph(svg3, sumstat,color){  
     var minx = d3.min(sumstat[0].values, function(d) { return +d["MSRP"]; })
     var maxx = d3.max(sumstat[0].values, function(d) { return +d["MSRP"]; })
     var x= d3.scaleLog().domain([minx/1.1,maxx*1.1]).range([0,width]).nice();
@@ -374,8 +374,82 @@ function updateGraph(svg3, data, sumstat,color){
             // hide the highlight circle when the mouse leaves the chart
             highlight(null);
         });    
+    const first = [
+        {
+            note: {
+                label: "The most expensive Make was Ford"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 550,
+            y: 340,
+            dy: -15,
+            dx: 15
+        }
+    ]
+    const second = [
+        {
+            note: {
+                label: "There was only one Toyota"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 640,
+            y: 240,
+            dy: 20,
+            dx: 5
+        }
+    ]
+    const third = [
+        {
+            note: {
+                label: "Toyota and Honda have the best priced compact cars wiht high city MPG"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 240,
+            y: 130,
+            dy: 40,
+            dx: 80
+        }
+    ]
+    const fourth = [
+        {
+            note: {
+                label: "Chevy Malibu was the only midsize and had the lowest MPG"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 240,
+            y: 350,
+            dy: -5,
+            dx: -15
+        }
+    ]
+    var annotations = []
+    if (window.dive2 =="2006"){
+        annotations = first;
+    } else if( window.dive2 =="2012"){
+        annotations = second;
+    } else if (window.dive2 =="2014"){
+        annotations = third;
+    }else if (window.dive2 =="2016"){
+        annotations = fourth;
+    }
+    
+        // Add annotation to the chart
+    const makeAnnotations = d3.annotation()
+        .annotations(annotations)
+        d3.select("svg")
+        .append("g")
+        .attr("class", "annotation-group")
+        .call(makeAnnotations)
 
-    // // callback to highlight a point
+    // callback to highlight a point
     function highlight(d) {
         // no point to highlight - hide the circle
         if (!d) {
@@ -537,6 +611,77 @@ function updateGraph2(svg2, data, sumstat){
         .attr('y', height + 40 )
         .attr('text-anchor', 'middle')
         .text('Year')
+
+    const first = [
+        {
+            note: {
+                label: "After this the count of automatic cars more than triples"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 770,
+            y: 320,
+            dy: -60,
+            dx: -13
+        }
+    ]
+    const second = [
+        {
+            note: {
+                label: "This year had the most Direct Drive cars"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 825,
+            y: 110,
+            dy: 5,
+            dx: -15
+        },
+        {
+            note: {
+                label: "The first Direct Drive car"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 715,
+            y: 365,
+            dy: -20,
+            dx: -1
+        }
+    ]
+    const third = [
+        {
+            note: {
+                label: "The year with the least Manual cars"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 545,
+            y: 350,
+            dy: -60,
+            dx: -13
+        }
+    ]
+    var annotations = []
+    if (window.dive1 =="AUTOMATIC"){
+        annotations = first;
+    } else if( window.dive1 =="DIRECT_DRIVE"){
+        annotations = second;
+    } else if (window.dive1 =="MANUAL"){
+        annotations = third;
+    }
+
+    // Add annotation to the chart
+    const makeAnnotations = d3.annotation()
+    .annotations(annotations)
+    d3.select("svg")
+    .append("g")
+    .attr("class", "annotation-group")
+    .call(makeAnnotations)
 }
 
 function graph1(){
@@ -565,15 +710,14 @@ function graph1(){
             var sect = document.getElementById("inds");
             var section = sect.options[sect.selectedIndex].value;
             console.log(section)
-            fd = filterJSON1(data, 'Make', section);
+            fd = filterJSON1(data, section);
                         
             d3.selectAll("g>*").remove();
             updateGraph1(svg1, data, fd);
             
             console.log(window.dive1)  
         });
-        // middle not used?
-        fd = filterJSON1(data, 'Make', 'All');
+        fd = filterJSON1(data, 'All');
         updateGraph1(svg1, data, fd);
     })
 }
@@ -585,6 +729,7 @@ function updateGraph1(svg1, data, sumstat){
         .entries(data);
     var types = tx.map(function(d){ return d.key }) // list of make names
     // Add X axis --> it is a date format
+    types.pop();
     var x = d3.scaleBand()
         .range([ 0, width ])  
         .domain(types)
@@ -649,4 +794,50 @@ function updateGraph1(svg1, data, sumstat){
         .attr('y', height + 40 )
         .attr('text-anchor', 'middle')
         .text('Transmission Type')
+
+    const annotations = [
+        {
+            note: {
+                label: "The top Transmission"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 320,
+            y: 170,
+            dy: 25,
+            dx: -25
+        },{
+            note: {
+                label: "The second largest transmission type"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 720,
+            y: 290,
+            dy: -60,
+            dx: -13
+        },
+        {
+            note: {
+                label: "The lowest count"   
+            },
+            connector: {
+                end: "dot" 
+            },
+            x: 580,
+            y: 375,
+            dy: -40,
+            dx: -1
+        }
+    ]
+
+    // Add annotation to the chart
+    const makeAnnotations = d3.annotation()
+    .annotations(annotations)
+    d3.select("svg")
+    .append("g")
+    .attr("class", "annotation-group")
+    .call(makeAnnotations)
 }
